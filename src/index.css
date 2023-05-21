@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@media (max-width: 800px) {
+    #forgotimg{
+    max-width: 57%;
+    margin: auto;
+    height: auto;
+  }
+}
+
+
+.edit:hover {
+  color: rgb(5, 90, 97);
+}
