@@ -1,18 +1,48 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {MdOutlineEmail} from 'react-icons/md';
 import forgot from '../assets/forgot.png';
 import { useNavigate } from 'react-router-dom';
+import { Context, server } from '..';
+import {toast} from 'react-hot-toast'
+import axios from 'axios'
 
 const ForgotPassword = () => {
+  const {isAuthenticated,setIsAuthenticated} = useContext(Context);
+
   const [userEmail, setUseremail] = useState('');
   const navigate = useNavigate();
+  const [emailError, setEmailError] = useState('');
 
-  const handleSubmit = (e) => {
+
+  const validateEmail = (email) => {
+  
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(email);
+  };
+  
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    setUseremail('');
-    // Handle form submission here
-    console.log('Email:', userEmail);
-    navigate('/reset')
+    try {
+      if(validateEmail(userEmail)){
+        const {data} = await axios.post(`${server}/user/forgotpassword`,{
+          email:userEmail
+      },{
+            headers:{
+                "Content-Type":"application/json"
+            },
+            withCredentials:true
+        })
+        setIsAuthenticated(true);
+        toast.success(`reset link send to ${userEmail}`);
+      }
+      else {
+        // Display an error message
+        setEmailError('Please enter a valid email address');
+      }
+  } catch (error) {
+      setIsAuthenticated(false);
+      toast.error("Failed");
+  }
 
   };
 
@@ -51,6 +81,8 @@ const ForgotPassword = () => {
             onChange={(e) => setUseremail(e.target.value)}
             style={{backgroundColor: '#f5f9f8'}}
           />
+        <span className="text-red-500" >{emailError}</span>
+
         </div>
 
           <div className="flex items-center justify-center mb-5 mx-3">

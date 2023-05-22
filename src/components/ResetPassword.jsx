@@ -1,20 +1,45 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {RiLockPasswordLine} from 'react-icons/ri';
 import reset from '../assets/reset.png';
+import { Navigate } from 'react-router-dom';
+import {toast} from 'react-hot-toast'
+import axios from 'axios'
+import { Context, server } from '..';
 
 const ResetPassword = () => {
+  const {isAuthenticated,setIsAuthenticated} = useContext(Context);
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmnewPassword, setConfirmNewPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const urlParams  = window.location.href;
+  const resetToken = urlParams.match(/reset\/(.+)/)[1];
+  console.log(resetToken)
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    setNewPassword('');
-    setConfirmNewPassword('');
-    // Handle form submission here
-    console.log('New Password:', newPassword);
-    console.log('Confirm Password:', confirmnewPassword);
+    try {
+        const {data} = await axios.put(`${server}/user/resetpassword/${resetToken}`,{
+          password:newPassword,
+          confirmPassword:confirmnewPassword
+      },{
+            headers:{
+                "Content-Type":"application/json"
+            },
+            withCredentials:true
+        })
+        setIsAuthenticated(true);
+        console.log(data)
+        toast.success(`Password Changed Successfully`);
+      
+  } catch (error) {
+      setIsAuthenticated(false);
+      // toast.error(data);
+  }
 
   };
+  if(isAuthenticated) return <Navigate to={"/"}/>
+
 
   return (
 

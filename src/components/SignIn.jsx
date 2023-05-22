@@ -1,24 +1,39 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {ImFacebook} from 'react-icons/im';
 import {RiGoogleFill} from 'react-icons/ri';
 import {BsLinkedin} from 'react-icons/bs';
 import {MdOutlineEmail} from 'react-icons/md';
 import {RiLockPasswordLine} from 'react-icons/ri';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import { Context, server } from '..';
+import {toast} from 'react-hot-toast'
+import axios from 'axios'
 
 const SignIn = () => {
+  const {isAuthenticated,setIsAuthenticated} = useContext(Context);
   const [userName, setUserName] = useState('');
   const [userpwd, setUserpwd] = useState('');
 
-  const handleSignInForm = (e) => {
+  const submitHandler = async(e) =>{
     e.preventDefault();
-    setUserName('');
-    setUserpwd('');
-    // Handle form submission here
-    console.log('UserName:', userName);
-    console.log('Password:', userpwd);
-  };
-
+    try {
+        const {data} = await axios.post(`${server}/user/login`,{
+            username:userName,
+            password:userpwd,
+        },{
+            headers:{
+                "Content-Type":"application/json"
+            },
+            withCredentials:true
+        })
+        setIsAuthenticated(true);
+        toast.success(data.message);
+    } catch (error) {
+        setIsAuthenticated(false);
+        toast.error(error.response.data.message);
+    }
+}
+  if(isAuthenticated) return <Navigate to={"/"}/>
   return (
 
     <div className='flex justify-center mt-20 max-[642px]:mt-10 h-75vh '>
@@ -29,7 +44,7 @@ const SignIn = () => {
 
         <div className='flex flex-col justify-center h-full max-[642px]:py-16'>
               
-        <h1 class="text-4xl text-white font-bold text-center ">Hello, Friend!</h1>
+        <h1 class="text-4xl text-white font-bold text-center ">Welcome Back!</h1>
 
         <p className='text-white mt-2 px-12 max-[784px]:px-5'>Enter your personal details and start jouney with us</p>
         <Link to='/signUp'>
@@ -48,7 +63,7 @@ const SignIn = () => {
         </div>
 
         <div className='shadow-md pt-14 max-[642px]:pt-5 max-[642px]:min-w-full max-[642px]:h-full rounded-tr-xl rounded-br-xl max-[642px]:rounded-tr-none max-[642px]:rounded-bl-xl' style={{ width: '75%'}}>
-        <form className="px-8 pb-8">
+        <form onSubmit={submitHandler} className="px-8 pb-8">
         <h1 className="text-4xl  max-[784px]:text-3xl font-bold text-center" style={{color: '#22b493'}}>Login to your Account</h1>
 
         <div className="my-5 flex items-center justify-center">
@@ -106,7 +121,6 @@ const SignIn = () => {
         <button
           className="text-white py-2 px-10 rounded-3xl focus:outline-none focus:shadow-outline"
           type="submit"
-          onClick={handleSignInForm}
           style={{backgroundColor: '#3aaea1', fontWeight : '400'}}
         >
           SIGN IN

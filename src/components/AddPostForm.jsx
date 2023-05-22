@@ -1,26 +1,40 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import dummy from "../assets/dummy.jpg";
+import {toast} from 'react-hot-toast'
+import axios from 'axios'
+import { Context, server } from '..';
 
-const initial_state = {
-  postimg: dummy,
-  likesNumber : 0,
-  title:'',
-  caption :''
-}
 
-const AddPostForm = ({handleAddFormData}) => {
-  const [post, setPost ] = useState(initial_state)
+const AddPostForm = () => {
+  const {isAuthenticated,setIsAuthenticated} = useContext(Context);
 
-  const handleChange = (e) => {
-    setPost({...post,
-      [e.target.name] : e.target.value 
-    });
+  const [title, setTitle] = useState('');
+  const [caption,setCaption] = useState('');
+  const [postImg, setPostImg] = useState(null);
 
-  }
-  const handleAddPost = (e) => {
+  const handleAddPost = async(e) => {
     e.preventDefault();
-    handleAddFormData(post);
-    setPost(initial_state)
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('caption', caption);
+    formData.append('post_img', postImg);
+    try {
+        const {data} = await axios.post(`${server}/post/new`,formData,{
+            headers:{
+                "Content-Type":"multipart/form-data"
+            },
+            withCredentials:true
+        })
+
+        setIsAuthenticated(true);
+        toast.success("Posted Uploaded");
+        setTitle('');
+        setCaption('');setPostImg(null);
+  } catch (error) {
+      setIsAuthenticated(false);
+      console.log("failed to post")
+  }
+
   }
   return (
     <div className="shadow-md flex flex-col gap-4 m-auto mt-3 py-5 pr-10 w-[38%] max-[1165px]:min-w-full">
@@ -30,11 +44,11 @@ const AddPostForm = ({handleAddFormData}) => {
           Post Title:
         </label>
         <input
-          value={post.title}
+          value={title}
           name='title'
           type="text"
           placeholder="Enter post title"
-          onChange={handleChange}
+          onChange={(e) => setTitle(e.target.value)}
           className="w-3/4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
         />
       </div>
@@ -44,11 +58,11 @@ const AddPostForm = ({handleAddFormData}) => {
           Post Caption:
         </label>
         <input
-          value={post.caption}
+          value={caption}
           name='caption'
           type="text"
           placeholder="Enter post title"
-          onChange={handleChange}
+          onChange={(e) => setCaption(e.target.value)}
           className="w-3/4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
         />
       </div>
@@ -62,19 +76,11 @@ const AddPostForm = ({handleAddFormData}) => {
           type="file"
           accept="image/*"
           name='postimg'
-          className='hidden'
-        />
-
-        <label
-          htmlFor="postImage"
+          onChange={(e) => setPostImg(e.target.files[0])}
+          // className='hidden'
           className="px-4 py-1 text-white font-bold rounded-md cursor-pointer"
           style={{background: '#22b493'}}
-          onClick={handleChange}       
-
-
-        >
-          Upload Post Image
-        </label>
+        />
         <button
           type="submit"
           className="px-4 py-1 text-white font-bold rounded-md "
